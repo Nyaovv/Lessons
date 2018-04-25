@@ -22,6 +22,9 @@ id  username    password  role_id              name     title
  # relo_id - FK Foreign Key (Внешний ключ)
  
  SQL ==подмножества==> DDL (create table) # Язык описания данных
-                       DML 
+                       DML: 1. insert
+							2. update
+							3. delete
+							4. select
                        
 # Любая база даннах работает медленно, если в ней есть 0 / null
