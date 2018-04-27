@@ -2,7 +2,7 @@
                     _           _
 MySQL (MariaDB)      |           |              
 PostgreSQL           |           |              
-MS SQL Server        |} СУБД     |}SQL              
+MS SQL Server        |> СУБД     |>SQL              
 Oracle              _|           |                  
                                  |
 SQLite                          _|
