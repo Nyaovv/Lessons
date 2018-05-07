@@ -1,6 +1,8 @@
 import os.path as Path
 import sqlite3
 
+from .converter import convert, inverse
+
 SQL_INSERT_URL = '''
 INSERT INTO shortener (original_url) VALUES (?)
 '''
@@ -17,14 +19,26 @@ SQL_SELECT_ALL = '''
 SQL_SELECT_URL_BY_ORIGINAL = SQL_SELECT_ALL +'WHERE=original_url=?'
 SQL_SELECT_URL_BY_PK = SQL_SELECT_ALL + ' WHERE id=?'
 
+
+def dict_factory(cursor, row):
+	d = {}
+	
+	print(row)
+	print(cursor.description)
+	
+	for idx, col in enumerate(cursor.description):
+		d[col[0]] = row[idx]
+	
+	return d
+
 # def connect(db_name=':memory:'):
 def connect(db_name=None):
 	"""Выполняет подключение к БД"""
 	if db_name is None:
 		db_name = ':memory:'
-		
+			
 	conn = sqlite3.connect(db_name)
-	# Магия !!!!
+	conn.row_factory = dict_factory
 	
 	return conn
 
@@ -41,7 +55,7 @@ def initialize(conn):
 
 def add_url(conn, url, domain=''):
 	"""Добавляет URL-адрес в БД и возвращает короткий"""
-	url = url.rstrip('/') """чтоб не хранить одинаковые юрл мы убираем слэши """
+	url = url.rstrip('/') #чтоб не хранить одинаковые юрл мы убираем слэши
 	
 	if not url:
 		raise RuntimeError("URL can't be empty. ")
@@ -56,11 +70,11 @@ def add_url(conn, url, domain=''):
 		
 		pk = cursor.lastrowid
 		# Магия по сокращению. \/ УЗНАТЬ
-		short_url = '{}/{}'.format(domain.rstrip('/'), pk)
+		short_url = '{}/{}'.format(domain.rstrip('/'), convert(pk))
 		
 		conn.execute(SQL_UPDATE_SHORT_URL, (short_url, pk))
 		
-		returh short_url
+		return short_url
 		
 		
 def find_url_by_origin(conn, origin_url):
@@ -71,4 +85,24 @@ def find_url_by_origin(conn, origin_url):
 		cursor = conn.execute(SQL_SELECT_URL_BY_ORIGINAL, (origin_url,))
 		return cursor.fetchone()
 		
-		
+
+def find_url_by_short(conn, short_url):
+	"""Возвращает URL-адрес по короткому URL"""
+	short_url = short_url.rsplit('/', 1).pop() # Неразает строчки до или после указанного элемента. Здесь справа (rsplit) отрезается '/'
+	pk = inverse(short_url)
+	return find_url_by_pk(conn, pk)
+
+
+def find_url_by_pk(conn, pk):
+	"""Возвращает URL-адрес по первичному ключу"""
+	with conn:
+		cursor - conn.execute(SQL_SELECT_URL_BY_PK, (pk,))
+		return cursor.fetchone()
+	
+	
+def find_all(conn):
+	"""Возвращает все URL-адреса из БД"""
+	with conn:
+		cursor = conn.execute(SQL_SELECT_ALL)
+		return cursor.fetchall()
+	

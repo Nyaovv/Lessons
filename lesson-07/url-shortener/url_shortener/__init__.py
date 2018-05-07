@@ -18,17 +18,23 @@ def action_find():
 
 def action_find_all():
 	"""Вывести все URL-адреса"""
+	with get_connection() as conn:
+		urls = storage.find_all(conn)
 
+		template = '{url[short_url]} - {url[original_url]} - {url[created]}'
+
+		for url in urls:
+			template.format(url['short_url'], url['original_url']
 
 def action_show_menu():
-	"""Показать меню"""
-	print('''
-	1. Добавить URL-адрес
-	2. Найти оригинальный URL-адрес
-	3. Вывести все URL-адреса
-	m. Показать меню
-	q. Выйти
-	''')
+    """Показать меню"""
+    print('''
+    1. Добавить URL-адрес
+    2. Найти оригинальный URL-адрес
+    3. Вывести все URL-адреса
+    m. Показать меню
+    q. Выйти
+''')
 
 def action_exit():
 	"""Выйти"""
