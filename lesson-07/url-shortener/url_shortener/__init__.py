@@ -1,3 +1,4 @@
+from collections import namedtuple, OrderedDict
 import sys
 
 from url_shortener import storage
@@ -5,6 +6,21 @@ from url_shortener import storage
 get_connection = lambda: storage.connect('shortener.sqlite')
 #Анонимная функция.
 
+
+Action = namedtuple('Action', ('func', 'name'))
+actions = OrderedDict()
+
+
+def menu_action(cmd, name=None):
+	def decorator(func):
+		nonlocal name
+		name = name or func.__doc__
+		actions[cmd] = Action(func, name)
+		return func
+	return decorator
+
+
+@menu_action('1')
 def action_add():
 	"""Добавить URL-адрес"""
 	url = input('\nВведите URL-адрес: ')
@@ -12,10 +28,13 @@ def action_add():
 	with get_connection() as conn:
 		short_url = storage.add_url(conn, url)
 
+
+@menu_action('2', 'Найти оригинальный URL-адрес')
 def action_find():
 	"""Найти оригинальный URL-адрес"""
 
 
+@menu_action('3', 'Вывести все URL-адреса')
 def action_find_all():
 	"""Вывести все URL-адреса"""
 	with get_connection() as conn:
@@ -24,18 +43,20 @@ def action_find_all():
 		template = '{url[short_url]} - {url[original_url]} - {url[created]}'
 
 		for url in urls:
-			template.format(url['short_url'], url['original_url']
+			template.format(url['short_url'], url['original_url'])
 
+
+@menu_action('m', 'Показать меню')
 def action_show_menu():
     """Показать меню"""
-    print('''
-    1. Добавить URL-адрес
-    2. Найти оригинальный URL-адрес
-    3. Вывести все URL-адреса
-    m. Показать меню
-    q. Выйти
-''')
+    menu = []
 
+    for cmd, action in actions.items():
+    	menu.append('{}. {}'.format(cmd, action.name))
+
+    print('\n'.join(menu))
+
+@menu_action('q', 'Выйти')
 def action_exit():
 	"""Выйти"""
 	sys.exit(0)
@@ -48,14 +69,7 @@ def main():
 	
 	action_show_menu()
 	
-	actions = {
-		'1': action_add,
-		'2': action_find,
-		'3': action_find_all,
-		'm': action_show_menu,
-		'q': action_exit,
-	}
-	
+
 	while 1:
 		cmd = input('\nВведите команду: ')
 		action = actions.get(cmd)
